@@ -41,9 +41,118 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
+const port = 3000;
+
+const todoList = [];
+const todoListUse = [];
 
 app.use(bodyParser.json());
+
+function generateRandomNumber() {
+  return (Math.floor(Math.random() * 900) + 100); // Generates a random number between 100 and 999
+}
+
+
+//gets the todoList (GET)
+function showTodoList(req, res) {
+  res.status(200).send(todoList);
+}
+
+//posts a new todo item (POST)
+function newTodoItem(req, res) {
+  var title = req.body.title;
+  var description = req.body.description;
+  var id = generateRandomNumber();
+
+  var todo = {
+    "title": title,
+    "description": description,
+    "id": id
+  }
+
+  var { id, ...updatedTodo } = todo;
+  var { title, description, ...idJson } = todo;
+
+  todoListUse.push(todo);
+  todoList.push(updatedTodo);
+
+  res.status(201).send(idJson);
+
+}
+
+//gets a todo item based on its ID (GET)
+function showTodoItem(req, res) {
+  var id = req.params.id;
+  const foundTodo = todoListUse.find((todo) => todo.id === parseInt(id));
+
+  if (foundTodo) {
+    var { id, ...newFoundTodo } = foundTodo;
+    res.status(200).json(foundTodo);
+  } else {
+    res.status(404).send('Todo not found');
+  }
+}
+
+//updates a todo item based on its id (PUT)
+function updateTodoItem(req, res) {
+  var id = req.params.id;
+  const foundTodo = todoListUse.find((todo) => todo.id === parseInt(id));
+
+  if (foundTodo) {
+    var targetId = parseInt(id);
+
+    var index = todoListUse.findIndex(obj => obj.id === targetId);
+
+    var title = req.body.title;
+    var description = req.body.description;
+    
+    if (title != null){
+      foundTodo.title = title;
+      todoList[index].title = title;
+    }
+    if(description != null){
+      foundTodo.description = description;
+      todoList[index].description = description;
+    }
+
+    res.status(200).send();
+  } else {
+    res.status(404).send('Todo not found');
+  }
+}
+
+//to delete a todo item based on its id (DELETE)
+function deleteTodoItem(req, res)
+{
+  var id = req.params.id;
+  const foundTodo = todoListUse.find((todo) => todo.id === parseInt(id));
+
+  if (foundTodo) {
+    var targetId = parseInt(id);
+
+    var index = todoListUse.findIndex(obj => obj.id === targetId);
+    
+    todoListUse.splice(index, 1)
+    todoList.splice(index, 1);
+
+    res.status(200).send();
+  } else {
+    res.status(404).send('Todo not found');
+  }
+}
+
+app.get('/todos', showTodoList);
+app.post('/todos', newTodoItem);
+app.get('/todos/:id', showTodoItem);
+app.put('/todos/:id', updateTodoItem);
+app.delete('/todos/:id', deleteTodoItem);
+
+// function started() {
+//   console.log(`Example app listening on port ${port}`)
+// }
+
+// app.listen(port, started);
+
 
 module.exports = app;
